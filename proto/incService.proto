@@ -1,0 +1,14 @@
+syntax = "proto3";
+option go_package = "Users/carl9/OneDrive/Skrivebord/disysMOCK/DISYSmock/proto";
+package proto;
+
+message IncMessage{
+    int32 incCount = 1;
+}
+message IncResponse{
+    int32 currentCount = 1;
+}
+
+service ChatService{
+    rpc increment (IncMessage) returns (IncResponse){}
+}
