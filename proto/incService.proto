@@ -9,6 +9,12 @@ message IncResponse{
     int32 currentCount = 1;
 }
 
+message Message {
+ string body = 1;
+
+}
+
 service ChatService{
     rpc increment (IncMessage) returns (IncResponse){}
+    rpc SayHello(Message) returns (Message){}
 }

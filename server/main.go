@@ -1,11 +1,18 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net"
 
 	"google.golang.org/grpc"
 )
+
+type Server struct{}
+
+func (s *Server) SayHello(ctx context.Context, message *proto.Message) {
+
+}
 
 func main() {
 	lis, err := net.Listen("tcp", ":9000")
@@ -17,7 +24,5 @@ func main() {
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over port 9000,%v", err)
-
 	}
-
 }

@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ChatServiceClient interface {
 	Increment(ctx context.Context, in *IncMessage, opts ...grpc.CallOption) (*IncResponse, error)
+	SayHello(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 }
 
 type chatServiceClient struct {
@@ -38,11 +39,21 @@ func (c *chatServiceClient) Increment(ctx context.Context, in *IncMessage, opts 
 	return out, nil
 }
 
+func (c *chatServiceClient) SayHello(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+	out := new(Message)
+	err := c.cc.Invoke(ctx, "/proto.ChatService/SayHello", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChatServiceServer is the server API for ChatService service.
 // All implementations must embed UnimplementedChatServiceServer
 // for forward compatibility
 type ChatServiceServer interface {
 	Increment(context.Context, *IncMessage) (*IncResponse, error)
+	SayHello(context.Context, *Message) (*Message, error)
 	mustEmbedUnimplementedChatServiceServer()
 }
 
@@ -52,6 +63,9 @@ type UnimplementedChatServiceServer struct {
 
 func (UnimplementedChatServiceServer) Increment(context.Context, *IncMessage) (*IncResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Increment not implemented")
+}
+func (UnimplementedChatServiceServer) SayHello(context.Context, *Message) (*Message, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
 }
 func (UnimplementedChatServiceServer) mustEmbedUnimplementedChatServiceServer() {}
 
@@ -84,6 +98,24 @@ func _ChatService_Increment_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatService_SayHello_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Message)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).SayHello(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.ChatService/SayHello",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).SayHello(ctx, req.(*Message))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ChatService_ServiceDesc is the grpc.ServiceDesc for ChatService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -94,6 +126,10 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "increment",
 			Handler:    _ChatService_Increment_Handler,
+		},
+		{
+			MethodName: "SayHello",
+			Handler:    _ChatService_SayHello_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
