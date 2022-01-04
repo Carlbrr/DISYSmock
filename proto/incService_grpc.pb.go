@@ -19,7 +19,14 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ChatServiceClient interface {
 	Increment(ctx context.Context, in *IncMessage, opts ...grpc.CallOption) (*IncResponse, error)
-	SayHello(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
+	//passive replication. Note there's a pulse method on the server
+	Replicate(ctx context.Context, in *ReplicateMessage, opts ...grpc.CallOption) (*ReplicateResponse, error)
+	RegisterPulse(ctx context.Context, in *ReplicateMessage, opts ...grpc.CallOption) (*Void, error)
+	CutOfReplica(ctx context.Context, in *CutReplica, opts ...grpc.CallOption) (*Void, error)
+	//ring based election - note we use a call ring election method on the server
+	RingElection(ctx context.Context, in *PortsAndClocks, opts ...grpc.CallOption) (*Void, error)
+	SelectAsNewLeader(ctx context.Context, in *Void, opts ...grpc.CallOption) (*ElectionPorts, error)
+	BroadcastNewLeader(ctx context.Context, in *ElectionPorts, opts ...grpc.CallOption) (*Void, error)
 }
 
 type chatServiceClient struct {
@@ -32,16 +39,61 @@ func NewChatServiceClient(cc grpc.ClientConnInterface) ChatServiceClient {
 
 func (c *chatServiceClient) Increment(ctx context.Context, in *IncMessage, opts ...grpc.CallOption) (*IncResponse, error) {
 	out := new(IncResponse)
-	err := c.cc.Invoke(ctx, "/proto.ChatService/increment", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.ChatService/Increment", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *chatServiceClient) SayHello(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
-	out := new(Message)
-	err := c.cc.Invoke(ctx, "/proto.ChatService/SayHello", in, out, opts...)
+func (c *chatServiceClient) Replicate(ctx context.Context, in *ReplicateMessage, opts ...grpc.CallOption) (*ReplicateResponse, error) {
+	out := new(ReplicateResponse)
+	err := c.cc.Invoke(ctx, "/proto.ChatService/Replicate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chatServiceClient) RegisterPulse(ctx context.Context, in *ReplicateMessage, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/proto.ChatService/RegisterPulse", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chatServiceClient) CutOfReplica(ctx context.Context, in *CutReplica, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/proto.ChatService/CutOfReplica", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chatServiceClient) RingElection(ctx context.Context, in *PortsAndClocks, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/proto.ChatService/RingElection", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chatServiceClient) SelectAsNewLeader(ctx context.Context, in *Void, opts ...grpc.CallOption) (*ElectionPorts, error) {
+	out := new(ElectionPorts)
+	err := c.cc.Invoke(ctx, "/proto.ChatService/SelectAsNewLeader", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chatServiceClient) BroadcastNewLeader(ctx context.Context, in *ElectionPorts, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/proto.ChatService/BroadcastNewLeader", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +105,14 @@ func (c *chatServiceClient) SayHello(ctx context.Context, in *Message, opts ...g
 // for forward compatibility
 type ChatServiceServer interface {
 	Increment(context.Context, *IncMessage) (*IncResponse, error)
-	SayHello(context.Context, *Message) (*Message, error)
+	//passive replication. Note there's a pulse method on the server
+	Replicate(context.Context, *ReplicateMessage) (*ReplicateResponse, error)
+	RegisterPulse(context.Context, *ReplicateMessage) (*Void, error)
+	CutOfReplica(context.Context, *CutReplica) (*Void, error)
+	//ring based election - note we use a call ring election method on the server
+	RingElection(context.Context, *PortsAndClocks) (*Void, error)
+	SelectAsNewLeader(context.Context, *Void) (*ElectionPorts, error)
+	BroadcastNewLeader(context.Context, *ElectionPorts) (*Void, error)
 	mustEmbedUnimplementedChatServiceServer()
 }
 
@@ -64,8 +123,23 @@ type UnimplementedChatServiceServer struct {
 func (UnimplementedChatServiceServer) Increment(context.Context, *IncMessage) (*IncResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Increment not implemented")
 }
-func (UnimplementedChatServiceServer) SayHello(context.Context, *Message) (*Message, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
+func (UnimplementedChatServiceServer) Replicate(context.Context, *ReplicateMessage) (*ReplicateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Replicate not implemented")
+}
+func (UnimplementedChatServiceServer) RegisterPulse(context.Context, *ReplicateMessage) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterPulse not implemented")
+}
+func (UnimplementedChatServiceServer) CutOfReplica(context.Context, *CutReplica) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CutOfReplica not implemented")
+}
+func (UnimplementedChatServiceServer) RingElection(context.Context, *PortsAndClocks) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RingElection not implemented")
+}
+func (UnimplementedChatServiceServer) SelectAsNewLeader(context.Context, *Void) (*ElectionPorts, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SelectAsNewLeader not implemented")
+}
+func (UnimplementedChatServiceServer) BroadcastNewLeader(context.Context, *ElectionPorts) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BroadcastNewLeader not implemented")
 }
 func (UnimplementedChatServiceServer) mustEmbedUnimplementedChatServiceServer() {}
 
@@ -90,7 +164,7 @@ func _ChatService_Increment_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.ChatService/increment",
+		FullMethod: "/proto.ChatService/Increment",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ChatServiceServer).Increment(ctx, req.(*IncMessage))
@@ -98,20 +172,110 @@ func _ChatService_Increment_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChatService_SayHello_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Message)
+func _ChatService_Replicate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReplicateMessage)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChatServiceServer).SayHello(ctx, in)
+		return srv.(ChatServiceServer).Replicate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.ChatService/SayHello",
+		FullMethod: "/proto.ChatService/Replicate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatServiceServer).SayHello(ctx, req.(*Message))
+		return srv.(ChatServiceServer).Replicate(ctx, req.(*ReplicateMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChatService_RegisterPulse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReplicateMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).RegisterPulse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.ChatService/RegisterPulse",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).RegisterPulse(ctx, req.(*ReplicateMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChatService_CutOfReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CutReplica)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).CutOfReplica(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.ChatService/CutOfReplica",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).CutOfReplica(ctx, req.(*CutReplica))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChatService_RingElection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PortsAndClocks)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).RingElection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.ChatService/RingElection",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).RingElection(ctx, req.(*PortsAndClocks))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChatService_SelectAsNewLeader_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Void)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).SelectAsNewLeader(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.ChatService/SelectAsNewLeader",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).SelectAsNewLeader(ctx, req.(*Void))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChatService_BroadcastNewLeader_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ElectionPorts)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).BroadcastNewLeader(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.ChatService/BroadcastNewLeader",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).BroadcastNewLeader(ctx, req.(*ElectionPorts))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -124,12 +288,32 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ChatServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "increment",
+			MethodName: "Increment",
 			Handler:    _ChatService_Increment_Handler,
 		},
 		{
-			MethodName: "SayHello",
-			Handler:    _ChatService_SayHello_Handler,
+			MethodName: "Replicate",
+			Handler:    _ChatService_Replicate_Handler,
+		},
+		{
+			MethodName: "RegisterPulse",
+			Handler:    _ChatService_RegisterPulse_Handler,
+		},
+		{
+			MethodName: "CutOfReplica",
+			Handler:    _ChatService_CutOfReplica_Handler,
+		},
+		{
+			MethodName: "RingElection",
+			Handler:    _ChatService_RingElection_Handler,
+		},
+		{
+			MethodName: "SelectAsNewLeader",
+			Handler:    _ChatService_SelectAsNewLeader_Handler,
+		},
+		{
+			MethodName: "BroadcastNewLeader",
+			Handler:    _ChatService_BroadcastNewLeader_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

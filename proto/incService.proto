@@ -9,12 +9,45 @@ message IncResponse{
     int32 currentCount = 1;
 }
 
-message Message {
- string body = 1;
-
+message ReplicateMessage {
+    string body = 1;
+    uint32 timeStamp = 2;
+    int32 incSum = 3;
 }
 
+message ReplicateResponse{
+    string body = 1;
+}
+message Void{}
+
+message cutReplica{
+    int32 port = 1;
+}
+message PortsAndClocks{
+    repeated int32 listOfPorts = 1;
+    repeated uint32 listOfClocks = 2;
+}
+message ElectionPorts{
+    repeated int32 listOfPorts = 1;
+}
+
+
 service ChatService{
-    rpc increment (IncMessage) returns (IncResponse){}
-    rpc SayHello(Message) returns (Message){}
+    rpc Increment(IncMessage) returns (IncResponse){}
+
+    //passive replication. Note there's a pulse method on the server
+    rpc Replicate(ReplicateMessage) returns (ReplicateResponse){}
+    rpc RegisterPulse(ReplicateMessage)returns (Void){}
+    rpc CutOfReplica(cutReplica) returns (Void){}
+
+    //ring based election - note we use a call ring election method on the server
+    rpc RingElection(PortsAndClocks) returns (Void){}
+    rpc SelectAsNewLeader(Void) returns (ElectionPorts){}
+    rpc BroadcastNewLeader(ElectionPorts) returns (Void){}
+
+    //Mutual exclusion by Ricart and Agrawala - not necessary as we just want to handle one crash
+
+    //rpc RingElection(PortsAndClocks) returns (Void){}
+    //rpc SelectNewLeader(Void) returns (ElectionPorts){}
+    //rpc BroadcastNewLeader(ElectionPorts) returns (Void){}
 }

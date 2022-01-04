@@ -1,0 +1,23 @@
+2022/01/04 01:06:36 Listening on port :5460
+2022/01/04 01:06:36 Recieved pulse
+rom prime replica. Last Pulse: 6.0225555s seconds ago
+2022/01/04 01:01:46 Leader election called
+2022/01/04 01:01:50 Missing pulse from prime replica. Last Pulse: 10.0509614s seconds ago
+2022/01/04 01:01:50 Leader election called
+2022/01/04 01:01:54 Missing pulse from prime replica. Last Pulse: 14.1058157s seconds ago
+2022/01/04 01:01:54 Leader election called
+2022/01/04 01:01:58 Missing pulse from prime replica. Last Pulse: 18.1357487s seconds ago
+2022/01/04 01:01:58 Leader election called
+2022/01/04 01:02:02 Missing pulse from prime replica. Last Pulse: 22.1943657s seconds ago
+2022/01/04 01:02:02 Leader election called
+2022/01/04 01:02:06 Missing pulse from prime replica. Last Pulse: 26.2385289s seconds ago
+2022/01/04 01:02:06 Leader election called
+2022/01/04 01:02:10 Missing pulse from prime replica. Last Pulse: 30.286496s seconds ago
+2022/01/04 01:02:10 Leader election called
+2022/01/04 01:02:14 Missing pulse from prime replica. Last Pulse: 34.3268484s seconds ago
+2022/01/04 01:02:14 Leader election called
+2022/01/04 01:02:18 Missing pulse from prime replica. Last Pulse: 38.3658212s seconds ago
+2022/01/04 01:02:18 Leader election called
+2022/01/04 01:02:22 Missing pulse from prime replica. Last Pulse: 42.4278229s seconds ago
+2022/01/04 01:02:22 Leader election called
+2022/01/04 01:02:25 Recieved pulse
